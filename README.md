@@ -4,26 +4,36 @@ This is a local web application for EMDR therapy, featuring a moving ball on a g
 
 ## How to Run
 
-### Backend (Flask)
-1. Install dependencies:
-   ```bash
-   pip install flask flask-cors
-   ```
-2. Start the backend:
-   ```bash
-   python backend/app.py
-   ```
+### 1. Clone the Project
 
-### Frontend (Vue.js)
-1. Install dependencies:
-   ```bash
-   cd frontend
-   npm install
-   ```
-2. Build the frontend:
-   ```bash
-   npm run build
-   ```
+Clone the repository from GitHub:
+```bash
+git clone https://github.com/dapo666/EMDR
+cd EMDR
+```
+
+### 2. Backend (Flask)
+
+Set up a Python virtual environment and install dependencies:
+```bash
+python3 -m venv venv
+source venv/bin/activate  # On Windows use: venv\Scripts\activate
+pip install flask flask-cors
+```
+
+Start the backend:
+```bash
+python3 backend/app.py
+```
+
+### 3. Frontend (Vue.js)
+
+Install frontend dependencies and build:
+```bash
+cd frontend
+npm install
+npm run build
+```
 
 The Flask backend will serve the built frontend at `http://localhost:5000`.
 
