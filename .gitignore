@@ -1,0 +1,37 @@
+# Node/Vue frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.DS_Store
+
+# Python/Flask backend
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.env
+*.DS_Store
+*.sqlite3
+*.db
+backend/.env
+backend/__pycache__/
+backend/.DS_Store
+
+# VS Code
+.vscode/
+
+# macOS
+.DS_Store
+
+# Virtual environments
+.venv/
+env/
+venv/
+
+# Logs
+*.log
+
+# Misc
+*.swp
+*.swo
+.idea/
