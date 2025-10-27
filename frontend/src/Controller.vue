@@ -1,3 +1,5 @@
+
+
 <template>
   <div class="controller-bg">
     <div class="controller-card">
@@ -35,7 +37,7 @@
       </div>
       <div class="controls">
         <label><span class="icon">⚡</span> Speed:<br>
-          <input type="range" min="1" max="20" v-model="speed" @input="updateBall" />
+          <input type="range" min="1" max="40" v-model="speed" @input="updateBall" />
         </label>
         <div class="speed-presets">
           <span class="icon">🚦</span> Presets:
@@ -116,28 +118,14 @@ export default {
       },
       methods: {
         setPresetSpeed(movementsPerMin) {
-          if (movementsPerMin === 45) this.speed = 4;
-          else if (movementsPerMin === 75) this.speed = 7;
-          else if (movementsPerMin === 120) this.speed = 12;
+          if (movementsPerMin === 45) this.speed = 8;
+          else if (movementsPerMin === 75) this.speed = 14;
+          else if (movementsPerMin === 120) this.speed = 24;
           this.updateBall();
         },
         updateBallSize() {
           this.previewBallSize = this.ballSize;
           axios.post('/api/ball', { speed: this.speed, bounceMode: this.bounceMode, isMoving: this.isMoving, ballSize: this.ballSize });
-        },
-        setPresetSpeed(movementsPerMin) {
-          // Map 45 -> 4, 75 -> 7, 120 -> 12
-          if (movementsPerMin === 45) this.speed = 4;
-          else if (movementsPerMin === 75) this.speed = 7;
-          else if (movementsPerMin === 120) this.speed = 12;
-          this.updateBall();
-        },
-        setPresetSpeed(movementsPerMin) {
-          // Map 45 -> 4, 75 -> 7, 120 -> 12
-          if (movementsPerMin === 45) this.speed = 4;
-          else if (movementsPerMin === 75) this.speed = 7;
-          else if (movementsPerMin === 120) this.speed = 12;
-          this.updateBall();
         },
         getSessionIdFromUrl() {
           const params = new URLSearchParams(window.location.search);
@@ -415,5 +403,3 @@ input[type="range"] {
   width: 120px;
 }
 </style>
-
-
