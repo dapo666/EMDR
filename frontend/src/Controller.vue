@@ -35,7 +35,18 @@
         <button class="start-btn" @click="startBall"><span class="icon">▶️</span> Start</button>
         <button class="stop-btn" @click="stopBall"><span class="icon">⏹️</span> Stop</button>
       </div>
-      <div class="controls">
+      <div class="sound-controls" style="margin-bottom:32px;display:flex;flex-direction:column;align-items:center;gap:12px;">
+        <h2 style="font-size:1.1em;color:#2196f3;margin-bottom:10px;"><span class="icon">🔊</span>Bilateral Sound Controls</h2>
+        <div v-if="bilateralSoundActive" class="sound-status-active">
+          <span class="icon">✅</span> Sound is ACTIVE on patient side
+        </div>
+        <div v-else class="sound-status-inactive">
+          <span class="icon">❌</span> Sound is OFF
+        </div>
+        <button class="start-btn" @click="startBilateralSound"><span class="icon">🔊</span> Start Bilateral Sound</button>
+        <button class="stop-btn" @click="stopBilateralSound"><span class="icon">🔇</span> Stop Bilateral Sound</button>
+      </div>
+  <div class="controls">
         <label><span class="icon">⚡</span> Speed:<br>
           <input type="range" min="1" max="40" v-model="speed" @input="updateBall" />
         </label>
@@ -86,7 +97,8 @@ export default {
       previewDirectionY: 1,
   previewBallSize: 30,
   ballSize: 30,
-      previewInterval: null
+      previewInterval: null,
+      bilateralSoundActive: false
     };
       },
       computed: {
@@ -117,6 +129,14 @@ export default {
         }
       },
       methods: {
+        startBilateralSound() {
+          const sessionParam = this.sessionId ? `?session=${this.sessionId}` : '';
+          axios.post(`/api/sound${sessionParam}`, { bilateral: true, speed: 500 });
+        },
+        stopBilateralSound() {
+          const sessionParam = this.sessionId ? `?session=${this.sessionId}` : '';
+          axios.post(`/api/sound${sessionParam}`, { bilateral: false, speed: 500 });
+        },
         setPresetSpeed(movementsPerMin) {
           if (movementsPerMin === 45) this.speed = 8;
           else if (movementsPerMin === 75) this.speed = 14;
@@ -125,11 +145,20 @@ export default {
         },
         updateBallSize() {
           this.previewBallSize = this.ballSize;
-          axios.post('/api/ball', { speed: this.speed, bounceMode: this.bounceMode, isMoving: this.isMoving, ballSize: this.ballSize });
+          const sessionParam = this.sessionId ? `?session=${this.sessionId}` : '';
+          axios.post(`/api/ball${sessionParam}`, { speed: this.speed, bounceMode: this.bounceMode, isMoving: this.isMoving, ballSize: this.ballSize });
         },
         getSessionIdFromUrl() {
           const params = new URLSearchParams(window.location.search);
-          this.sessionId = params.get('session') || '';
+          let sessionId = params.get('session');
+          if (!sessionId) {
+            // Create a new session ID for the therapist
+            sessionId = 'session_' + Math.random().toString(36).substr(2, 9);
+            // Update URL without reloading
+            const newUrl = `${window.location.pathname}?session=${sessionId}`;
+            window.history.replaceState({}, '', newUrl);
+          }
+          this.sessionId = sessionId;
         },
           copyPatientUrl() {
             navigator.clipboard.writeText(window.location.origin + this.patientUrl);
@@ -194,23 +223,31 @@ export default {
         },
         stopBall() {
           this.isMoving = false;
-          axios.post('/api/ball', { speed: this.speed, bounceMode: this.bounceMode, isMoving: false, ballSize: this.ballSize });
+          const sessionParam = this.sessionId ? `?session=${this.sessionId}` : '';
+          axios.post(`/api/ball${sessionParam}`, { speed: this.speed, bounceMode: this.bounceMode, isMoving: false, ballSize: this.ballSize });
+          // Also stop bilateral sound when stopping ball movement
+          this.stopBilateralSound();
         },
         startBall() {
           this.isMoving = true;
-          axios.post('/api/ball', { speed: this.speed, bounceMode: this.bounceMode, isMoving: true, ballSize: this.ballSize });
+          const sessionParam = this.sessionId ? `?session=${this.sessionId}` : '';
+          axios.post(`/api/ball${sessionParam}`, { speed: this.speed, bounceMode: this.bounceMode, isMoving: true, ballSize: this.ballSize });
         },
         updateBall() {
-          axios.post('/api/ball', { speed: this.speed, bounceMode: this.bounceMode, isMoving: this.isMoving, ballSize: this.ballSize });
+          const sessionParam = this.sessionId ? `?session=${this.sessionId}` : '';
+          axios.post(`/api/ball${sessionParam}`, { speed: this.speed, bounceMode: this.bounceMode, isMoving: this.isMoving, ballSize: this.ballSize });
         },
         updateBackground() {
-          axios.post('/api/background', { backgroundColor: this.backgroundColor });
+          const sessionParam = this.sessionId ? `?session=${this.sessionId}` : '';
+          axios.post(`/api/background${sessionParam}`, { backgroundColor: this.backgroundColor });
         },
         updateBallColor() {
-          axios.post('/api/ballcolor', { ballColor: this.ballColor });
+          const sessionParam = this.sessionId ? `?session=${this.sessionId}` : '';
+          axios.post(`/api/ballcolor${sessionParam}`, { ballColor: this.ballColor });
         },
         fetchBall() {
-          axios.get('/api/ball').then(res => {
+          const sessionParam = this.sessionId ? `?session=${this.sessionId}` : '';
+          axios.get(`/api/ball${sessionParam}`).then(res => {
             if (res.data.error && res.data.message) {
               this.sessionLimitError = true;
               return;
@@ -224,11 +261,14 @@ export default {
               this.previewBallSize = res.data.ballSize;
             }
           });
-          axios.get('/api/background').then(res => {
+          axios.get(`/api/background${sessionParam}`).then(res => {
             this.backgroundColor = res.data.backgroundColor || '#888';
           });
-          axios.get('/api/ballcolor').then(res => {
+          axios.get(`/api/ballcolor${sessionParam}`).then(res => {
             this.ballColor = res.data.ballColor || '#2196f3';
+          });
+          axios.get(`/api/sound${sessionParam}`).then(res => {
+            this.bilateralSoundActive = res.data.bilateral || false;
           });
         },
         handlePreviewResize() {
@@ -242,6 +282,7 @@ export default {
       },
       mounted() {
         this.getSessionIdFromUrl();
+        this.fetchBall();
         this.previewX = 0;
         this.previewY = 0;
         this.previewDirectionX = 1;
@@ -251,10 +292,17 @@ export default {
             this.movePreviewBall();
           }
         }, 30);
+        // Poll for state updates
+        this.fetchInterval = setInterval(() => {
+          this.fetchBall();
+        }, 500);
         window.addEventListener('resize', this.handlePreviewResize);
       },
       beforeDestroy() {
         clearInterval(this.previewInterval);
+        if (this.fetchInterval) {
+          clearInterval(this.fetchInterval);
+        }
         window.removeEventListener('resize', this.handlePreviewResize);
       }
 }
@@ -401,5 +449,34 @@ label {
 }
 input[type="range"] {
   width: 120px;
+}
+.sound-status-active {
+  background: linear-gradient(90deg, #4caf50 0%, #81c784 100%);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 1.1em;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+  animation: pulse 2s ease-in-out infinite;
+}
+.sound-status-inactive {
+  background: linear-gradient(90deg, #9e9e9e 0%, #bdbdbd 100%);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 1.1em;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 4px 16px rgba(76, 175, 80, 0.5);
+  }
 }
 </style>

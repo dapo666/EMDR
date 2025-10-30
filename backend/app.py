@@ -8,6 +8,12 @@ import uuid
 CORS(app)
 
 def get_session_id():
+    # First try to get session from URL query parameter
+    session_id_from_url = request.args.get('session')
+    if session_id_from_url:
+        return session_id_from_url
+    
+    # Fall back to cookie-based session
     if "session_id" not in session:
         session["session_id"] = str(uuid.uuid4())
     return session["session_id"]
@@ -28,7 +34,24 @@ def get_default_state():
         "ball_color_state": {
             "ballColor": "#2196f3"
         }
+        ,
+        "sound_state": {
+            "bilateral": False,
+            "speed": 500
+        }
     }
+@app.route("/api/sound", methods=["GET"])
+def get_sound_state():
+    state = get_session_state()
+    return jsonify(state["sound_state"])
+
+@app.route("/api/sound", methods=["POST"])
+def set_sound_state():
+    data = request.json
+    state = get_session_state()
+    state["sound_state"]["bilateral"] = data.get("bilateral", state["sound_state"]["bilateral"])
+    state["sound_state"]["speed"] = data.get("speed", state["sound_state"]["speed"])
+    return jsonify(state["sound_state"])
 
 def get_session_state():
     session_id = get_session_id()
