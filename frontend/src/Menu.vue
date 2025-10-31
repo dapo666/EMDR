@@ -4,7 +4,12 @@
       <h1>EMDR Therapy App</h1>
       <p class="subtitle">Professional bilateral stimulation for EMDR therapy sessions</p>
       <div class="menu-buttons">
-        <button class="therapist-btn" @click="openTherapist">Start Therapist Session</button>
+        <button 
+          :class="['therapist-btn', { 'disabled': limitReached }]" 
+          @click="openTherapist"
+          :disabled="limitReached">
+          {{ limitReached ? 'Maximum sessions limit reached' : 'Start Therapist Session' }}
+        </button>
       </div>
       <div class="features">
         <div class="feature-item">
@@ -44,9 +49,37 @@
 </template>
 
 <script>
+import axios from 'axios';
+
 export default {
+  data() {
+    return {
+      limitReached: false
+    };
+  },
+  mounted() {
+    this.checkSessionLimit();
+    // Check session limit every 5 seconds
+    this.intervalId = setInterval(() => {
+      this.checkSessionLimit();
+    }, 5000);
+  },
+  beforeDestroy() {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+    }
+  },
   methods: {
+    async checkSessionLimit() {
+      try {
+        const response = await axios.get('/api/session-count');
+        this.limitReached = response.data.limitReached;
+      } catch (error) {
+        console.error('Error checking session limit:', error);
+      }
+    },
     openTherapist() {
+      if (this.limitReached) return;
       // Generate random session ID
       const sessionId = Math.random().toString(36).substr(2, 9);
       window.open(`/controller?session=${sessionId}`, '_blank');
@@ -115,6 +148,15 @@ body {
 }
 .patient-btn:hover, .therapist-btn:hover {
   background: #333;
+}
+.therapist-btn.disabled {
+  background: #9e9e9e;
+  color: #e0e0e0;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.therapist-btn.disabled:hover {
+  background: #9e9e9e;
 }
 .features {
   display: flex;

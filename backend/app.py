@@ -56,9 +56,9 @@ def set_sound_state():
 
 def get_session_state():
     session_id = get_session_id()
-    # Limit to 10 simultaneous sessions
+    # Limit to 50 simultaneous sessions
     if session_id not in session_states:
-        if len(session_states) >= 10:
+        if len(session_states) >= 50:
             return jsonify({
                 "error": True,
                 "message": "Max session limit reached for free version. To allow new connection please subscribe to paid version. You can contact us by email: info@expatpsychologie.nl"
@@ -91,6 +91,14 @@ def set_ballcolor():
     if "randomColor" in data:
         state["ball_color_state"]["randomColor"] = data["randomColor"]
     return jsonify(state["ball_color_state"])
+
+@app.route("/api/session-count", methods=["GET"])
+def get_session_count():
+    return jsonify({
+        "count": len(session_states),
+        "limit": 50,
+        "limitReached": len(session_states) >= 50
+    })
 
 @app.route("/api/ball", methods=["GET"])
 def get_ball():
