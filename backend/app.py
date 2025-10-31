@@ -29,10 +29,11 @@ def get_default_state():
             "ballSize": 30
         },
         "background_state": {
-            "backgroundColor": "#888"
+            "backgroundColor": "#ffffff"
         },
         "ball_color_state": {
-            "ballColor": "#2196f3"
+            "ballColor": "#2196f3",
+            "randomColor": False
         }
         ,
         "sound_state": {
@@ -85,7 +86,10 @@ def get_ballcolor():
 def set_ballcolor():
     data = request.json
     state = get_session_state()
-    state["ball_color_state"]["ballColor"] = data.get("ballColor", state["ball_color_state"]["ballColor"])
+    if "ballColor" in data:
+        state["ball_color_state"]["ballColor"] = data["ballColor"]
+    if "randomColor" in data:
+        state["ball_color_state"]["randomColor"] = data["randomColor"]
     return jsonify(state["ball_color_state"])
 
 @app.route("/api/ball", methods=["GET"])

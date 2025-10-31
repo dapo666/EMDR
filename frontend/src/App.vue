@@ -1,6 +1,6 @@
 <template>
   <div class="container" :style="containerStyle" @click="unlockAudio">
-    <div v-if="showAudioPrompt" class="audio-prompt">Click anywhere to enable sound</div>
+    <div v-if="showAudioPrompt" class="audio-prompt">Click anywhere to start session</div>
     <div class="ball" :style="ballStyle"></div>
   </div>
 </template>
@@ -19,7 +19,7 @@ export default {
       directionY: 1,
       animationFrame: null,
       ballSize: 30, // px
-      backgroundColor: '#888',
+      backgroundColor: '#ffffff',
       ballColor: '#2196f3',
       isMoving: false,
       bilateralSoundActive: false,
@@ -32,7 +32,13 @@ export default {
       bilateralSpeed: 500,
       fetchInterval: null,
       sessionId: '',
+      figure8Time: 0,
+      randomColor: false,
+      colorChangeInterval: null,
     };
+  },
+  mounted() {
+    document.title = 'EMDR - Patient';
   },
   computed: {
     ballStyle() {
@@ -50,7 +56,7 @@ export default {
     },
     containerStyle() {
       return {
-        background: this.backgroundColor
+        background: 'white'
       };
     }
   },
@@ -138,6 +144,24 @@ export default {
         }
         this.positionX = Math.max(minX, Math.min(maxX, this.positionX));
         this.positionY = Math.max(minY, Math.min(maxY, this.positionY));
+      } else if (this.bounceMode === 'figure8') {
+        // Figure-8 (lemniscate) pattern using parametric equations
+        // x = a * sin(t), y = a * sin(t) * cos(t)
+        const centerX = width / 2;
+        const centerY = height / 2;
+        const scale = Math.min(width, height) * 0.35; // 35% of smallest dimension
+        
+        // Increment time based on speed
+        this.figure8Time += this.speed * 0.01;
+        
+        // Parametric equations for figure-8
+        const t = this.figure8Time;
+        this.positionX = centerX + scale * Math.sin(t) - this.ballSize / 2;
+        this.positionY = centerY + scale * Math.sin(t) * Math.cos(t) - this.ballSize / 2;
+        
+        // Keep within bounds
+        this.positionX = Math.max(minX, Math.min(maxX, this.positionX));
+        this.positionY = Math.max(minY, Math.min(maxY, this.positionY));
       }
     },
     fetchBall() {
@@ -157,11 +181,35 @@ export default {
         this.lastBounceMode = this.bounceMode;
       });
       axios.get(`/api/background${sessionParam}`).then(res => {
-        this.backgroundColor = res.data.backgroundColor || '#888';
+        this.backgroundColor = res.data.backgroundColor || '#ffffff';
       });
       axios.get(`/api/ballcolor${sessionParam}`).then(res => {
-        this.ballColor = res.data.ballColor || '#2196f3';
+        const newRandomColor = res.data.randomColor || false;
+        
+        // Start or stop random color changing
+        if (newRandomColor && !this.randomColor) {
+          this.randomColor = true;
+          this.startRandomColor();
+        } else if (!newRandomColor && this.randomColor) {
+          this.randomColor = false;
+          this.stopRandomColor();
+          this.ballColor = res.data.ballColor || '#2196f3';
+        } else if (!newRandomColor) {
+          this.ballColor = res.data.ballColor || '#2196f3';
+        }
       });
+    },
+    startRandomColor() {
+      if (this.colorChangeInterval) return;
+      this.colorChangeInterval = setInterval(() => {
+        this.ballColor = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
+      }, 200); // Change color every 200ms
+    },
+    stopRandomColor() {
+      if (this.colorChangeInterval) {
+        clearInterval(this.colorChangeInterval);
+        this.colorChangeInterval = null;
+      }
     },
     // Bilateral sound logic
     checkBilateralSound() {
@@ -241,6 +289,9 @@ export default {
     if (this.bilateralSoundTimer) {
       clearInterval(this.bilateralSoundTimer);
     }
+    if (this.colorChangeInterval) {
+      clearInterval(this.colorChangeInterval);
+    }
   }
 };
 </script>
@@ -252,14 +303,19 @@ export default {
   top: 40%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: rgba(33,150,243,0.95);
+  background: #4a4a4a;
   color: #fff;
-  padding: 24px 40px;
-  border-radius: 16px;
-  font-size: 1.3em;
-  font-weight: 600;
+  padding: 20px 40px;
+  border-radius: 4px;
+  font-size: 1.2em;
+  font-weight: 500;
   z-index: 10;
-  box-shadow: 0 4px 24px rgba(33,150,243,0.18);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+.audio-prompt:hover {
+  background: #333;
 }
 html, body, .container {
   height: 100vh;
@@ -271,6 +327,7 @@ html, body, .container {
 .container {
   position: relative;
   overflow: hidden;
+  background: white !important;
   /* Enable hardware acceleration for better performance */
   -webkit-transform: translateZ(0);
   transform: translateZ(0);

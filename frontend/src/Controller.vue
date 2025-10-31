@@ -3,19 +3,10 @@
 <template>
   <div class="controller-bg">
     <div class="controller-card">
-      <h1><span class="icon">🩺</span> Therapist Controls</h1>
-      <div class="app-info">
-        <span class="icon">🆓</span>
-        Free version of the app tested in Google Chrome
-      </div>
-      <div class="instructions">
-        <span class="icon">💡</span>
-        <span>Please share the patient screen with the patient for the session.</span>
-      </div>
+      <h1>Therapist Controls</h1>
       <div class="patient-link">
-        <span class="icon">🔗</span>
         Patient link: <a :href="patientUrl" target="_blank">{{ patientUrl }}</a>
-          <button class="copy-btn" @click="copyPatientUrl"><span class="icon">📋</span> Copy</button>
+          <button class="copy-btn" @click="copyPatientUrl">Copy</button>
       </div>
       <div v-if="sessionLimitError" class="session-limit-notification">
         <span class="icon">🚫</span>
@@ -23,57 +14,76 @@
         To allow new connection please subscribe to paid version.<br>
         <span class="icon">✉️</span> Contact: <a href="mailto:info@expatpsychologie.nl">info@expatpsychologie.nl</a>
       </div>
-      <div v-else>
-        <div class="preview-title"><span class="icon">👁️</span> Patient Preview</div>
-        <div class="preview-container">
-          <div class="preview-bg" :style="previewContainerStyle">
-            <div class="preview-ball" :style="previewBallStyle"></div>
-          </div>
-        </div>
-      </div>
       <div class="controller-buttons">
-        <button class="start-btn" @click="startBall"><span class="icon">▶️</span> Start</button>
-        <button class="stop-btn" @click="stopBall"><span class="icon">⏹️</span> Stop</button>
+        <button :class="isMoving ? 'start-btn-active' : 'start-btn'" @click="startBall">Start</button>
+        <button :class="!isMoving ? 'stop-btn-active' : 'stop-btn'" @click="stopBall">Stop</button>
       </div>
       <div class="sound-controls" style="margin-bottom:32px;display:flex;flex-direction:column;align-items:center;gap:12px;">
-        <h2 style="font-size:1.1em;color:#2196f3;margin-bottom:10px;"><span class="icon">🔊</span>Bilateral Sound Controls</h2>
-        <div v-if="bilateralSoundActive" class="sound-status-active">
-          <span class="icon">✅</span> Sound is ACTIVE on patient side
-        </div>
-        <div v-else class="sound-status-inactive">
-          <span class="icon">❌</span> Sound is OFF
-        </div>
-        <button class="start-btn" @click="startBilateralSound"><span class="icon">🔊</span> Start Bilateral Sound</button>
-        <button class="stop-btn" @click="stopBilateralSound"><span class="icon">🔇</span> Stop Bilateral Sound</button>
+        <button 
+          :class="bilateralSoundActive ? 'sound-btn-on' : 'sound-btn-off'" 
+          @click="toggleBilateralSound">
+          Bilateral sound: {{ bilateralSoundActive ? 'ON' : 'OFF' }}
+        </button>
       </div>
   <div class="controls">
-        <label><span class="icon">⚡</span> Speed:<br>
-          <input type="range" min="1" max="40" v-model="speed" @input="updateBall" />
-        </label>
-        <div class="speed-presets">
-          <span class="icon">🚦</span> Presets:
-          <button class="preset-btn" @click="setPresetSpeed(45)">BLS Slow<br><small>45 movements/min</small></button>
-          <button class="preset-btn" @click="setPresetSpeed(75)">BLS Medium<br><small>75 movements/min</small></button>
-          <button class="preset-btn" @click="setPresetSpeed(120)">BLS Fast<br><small>120 movements/min</small></button>
+        <div class="control-row">
+          <label class="control-label">
+            <strong>Speed:</strong>
+            <input type="range" min="1" max="80" v-model="speed" @input="updateBall" />
+          </label>
         </div>
-        <label><span class="icon">🔀</span> Bounce Mode:<br>
-          <select v-model="bounceMode" @change="updateBall">
-            <option value="horizontal">Left-Right</option>
-            <option value="vertical">Up-Down</option>
-            <option value="random">Random</option>
-          </select>
-        </label>
-        <label><span class="icon">🎨</span> Background Color:<br>
-          <input type="color" v-model="backgroundColor" @input="updateBackground" />
-        </label>
-        <label><span class="icon">⚪</span> Ball Color:<br>
-          <input type="color" v-model="ballColor" @input="updateBallColor" />
-        </label>
-        <label style="margin-left: 24px"><span class="icon">🔵</span> Ball Size:<br>
-          <input type="range" min="10" max="80" v-model="ballSize" @input="updateBallSize" />
-        </label>
+        <div class="control-row">
+          <label class="control-label">
+            <strong>Bounce Mode:</strong>
+            <select v-model="bounceMode" @change="updateBall">
+              <option value="horizontal">Left-Right</option>
+              <option value="vertical">Up-Down</option>
+              <option value="random">Random</option>
+              <option value="figure8">8 Shape</option>
+            </select>
+          </label>
+        </div>
+        <div class="control-row">
+          <label class="control-label">
+            <strong>Ball Size:</strong>
+            <input type="range" min="10" max="80" v-model="ballSize" @input="updateBallSize" />
+          </label>
+        </div>
+        <div class="control-row">
+          <label class="control-label">
+            <strong>Background Color:</strong>
+            <input type="color" v-model="backgroundColor" @input="updateBackground" />
+          </label>
+        </div>
+        <div class="control-row">
+          <label class="control-label">
+            <strong>Ball Color:</strong>
+            <div class="ball-color-controls">
+              <select v-model="ballColorMode" @change="updateBallColorMode">
+                <option value="static">Static Color</option>
+                <option value="random">Random Colors</option>
+              </select>
+              <input v-if="ballColorMode === 'static'" type="color" v-model="ballColor" @input="updateBallColor" />
+            </div>
+          </label>
+        </div>
       </div>
     </div>
+    <footer class="company-footer">
+      <div class="footer-content">
+        <div class="company-info">
+          <strong>DRP CONSULTING</strong><br>
+          KVK: 85650595<br>
+          © 2025
+        </div>
+        <div class="footer-cta">
+          Interested in developing your own application? 
+          <a href="mailto:info@expatpsychologie.nl" class="contact-link">Contact us now!</a>
+          <br><br>
+          <a href="https://expatpsychologie.nl/en/" target="_blank" class="contact-link">ExpatPsychologie.nl</a> - Your Psychologist in the Netherlands
+        </div>
+      </div>
+    </footer>
   </div>
 </template>
 
@@ -82,53 +92,35 @@
 import axios from 'axios';
 
 export default {
+  mounted() {
+    document.title = 'EMDR - Therapist';
+  },
   data() {
     return {
   speed: 5,
   sessionLimitError: false,
       bounceMode: 'horizontal',
-      backgroundColor: '#888',
+      backgroundColor: '#ffffff',
       ballColor: '#2196f3',
+      ballColorMode: 'static',
       isMoving: false,
       sessionId: '',
-      previewX: 0,
-      previewY: 0,
-      previewDirectionX: 1,
-      previewDirectionY: 1,
-  previewBallSize: 30,
-  ballSize: 30,
-      previewInterval: null,
+      ballSize: 30,
       bilateralSoundActive: false
     };
       },
       computed: {
         patientUrl() {
           return `/patient?session=${this.sessionId}`;
-        },
-        previewBallStyle() {
-          return {
-            left: this.previewX + 'px',
-            top: this.previewY + 'px',
-            background: this.ballColor,
-            width: this.ballSize + 'px',
-            height: this.ballSize + 'px',
-            borderRadius: '50%',
-            position: 'absolute',
-          };
-        },
-        previewContainerStyle() {
-          return {
-            background: this.backgroundColor,
-            width: '320px', // 16:9 aspect ratio (width)
-            height: '180px', // 16:9 aspect ratio (height)
-            position: 'relative',
-            borderRadius: '16px',
-            overflow: 'hidden',
-            margin: '0 auto'
-          };
         }
       },
       methods: {
+        toggleBilateralSound() {
+          const sessionParam = this.sessionId ? `?session=${this.sessionId}` : '';
+          const newState = !this.bilateralSoundActive;
+          axios.post(`/api/sound${sessionParam}`, { bilateral: newState, speed: 500 });
+          this.bilateralSoundActive = newState;
+        },
         startBilateralSound() {
           const sessionParam = this.sessionId ? `?session=${this.sessionId}` : '';
           axios.post(`/api/sound${sessionParam}`, { bilateral: true, speed: 500 });
@@ -137,14 +129,7 @@ export default {
           const sessionParam = this.sessionId ? `?session=${this.sessionId}` : '';
           axios.post(`/api/sound${sessionParam}`, { bilateral: false, speed: 500 });
         },
-        setPresetSpeed(movementsPerMin) {
-          if (movementsPerMin === 45) this.speed = 8;
-          else if (movementsPerMin === 75) this.speed = 14;
-          else if (movementsPerMin === 120) this.speed = 24;
-          this.updateBall();
-        },
         updateBallSize() {
-          this.previewBallSize = this.ballSize;
           const sessionParam = this.sessionId ? `?session=${this.sessionId}` : '';
           axios.post(`/api/ball${sessionParam}`, { speed: this.speed, bounceMode: this.bounceMode, isMoving: this.isMoving, ballSize: this.ballSize });
         },
@@ -164,63 +149,6 @@ export default {
             navigator.clipboard.writeText(window.location.origin + this.patientUrl);
             this.$emit('show-toast', 'Patient link copied!');
           },
-        movePreviewBall() {
-          const width = 320; // therapist preview width (matches previewContainerStyle)
-          const height = 180; // therapist preview height (matches previewContainerStyle)
-          const minX = 0;
-          const minY = 0;
-          const maxX = width - this.previewBallSize;
-          const maxY = height - this.previewBallSize;
-          if (this.bounceMode === 'horizontal') {
-            this.previewY = Math.floor(height / 2 - this.previewBallSize / 2);
-            this.previewX += this.speed * this.previewDirectionX;
-            if (this.previewX > maxX) {
-              this.previewX = maxX;
-              this.previewDirectionX = -1;
-            } else if (this.previewX < minX) {
-              this.previewX = minX;
-              this.previewDirectionX = 1;
-            }
-          } else if (this.bounceMode === 'vertical') {
-            this.previewX = Math.floor(width / 2 - this.previewBallSize / 2);
-            this.previewY += this.speed * this.previewDirectionY;
-            if (this.previewY > maxY) {
-              this.previewY = maxY;
-              this.previewDirectionY = -1;
-            } else if (this.previewY < minY) {
-              this.previewY = minY;
-              this.previewDirectionY = 1;
-            }
-          } else if (this.bounceMode === 'diagonal') {
-            this.previewX += this.speed * this.previewDirectionX;
-            this.previewY += this.speed * this.previewDirectionY;
-            if (this.previewX >= maxX) {
-              this.previewX = maxX;
-              this.previewDirectionX = -1;
-            } else if (this.previewX <= minX) {
-              this.previewX = minX;
-              this.previewDirectionX = 1;
-            }
-            if (this.previewY >= maxY) {
-              this.previewY = maxY;
-              this.previewDirectionY = -1;
-            } else if (this.previewY <= minY) {
-              this.previewY = minY;
-              this.previewDirectionY = 1;
-            }
-          } else if (this.bounceMode === 'random') {
-            this.previewX += this.speed * this.previewDirectionX;
-            this.previewY += this.speed * this.previewDirectionY;
-            if (this.previewX >= maxX || this.previewX <= minX) {
-              this.previewDirectionX = Math.random() > 0.5 ? 1 : -1;
-            }
-            if (this.previewY >= maxY || this.previewY <= minY) {
-              this.previewDirectionY = Math.random() > 0.5 ? 1 : -1;
-            }
-            this.previewX = Math.max(minX, Math.min(maxX, this.previewX));
-            this.previewY = Math.max(minY, Math.min(maxY, this.previewY));
-          }
-        },
         stopBall() {
           this.isMoving = false;
           const sessionParam = this.sessionId ? `?session=${this.sessionId}` : '';
@@ -243,7 +171,15 @@ export default {
         },
         updateBallColor() {
           const sessionParam = this.sessionId ? `?session=${this.sessionId}` : '';
-          axios.post(`/api/ballcolor${sessionParam}`, { ballColor: this.ballColor });
+          axios.post(`/api/ballcolor${sessionParam}`, { ballColor: this.ballColor, randomColor: false });
+        },
+        updateBallColorMode() {
+          const sessionParam = this.sessionId ? `?session=${this.sessionId}` : '';
+          if (this.ballColorMode === 'random') {
+            axios.post(`/api/ballcolor${sessionParam}`, { randomColor: true });
+          } else {
+            axios.post(`/api/ballcolor${sessionParam}`, { ballColor: this.ballColor, randomColor: false });
+          }
         },
         fetchBall() {
           const sessionParam = this.sessionId ? `?session=${this.sessionId}` : '';
@@ -258,52 +194,32 @@ export default {
             this.isMoving = res.data.isMoving || false;
             if (res.data.ballSize !== undefined) {
               this.ballSize = res.data.ballSize;
-              this.previewBallSize = res.data.ballSize;
             }
           });
           axios.get(`/api/background${sessionParam}`).then(res => {
-            this.backgroundColor = res.data.backgroundColor || '#888';
+            this.backgroundColor = res.data.backgroundColor || '#ffffff';
           });
           axios.get(`/api/ballcolor${sessionParam}`).then(res => {
             this.ballColor = res.data.ballColor || '#2196f3';
+            this.ballColorMode = res.data.randomColor ? 'random' : 'static';
           });
           axios.get(`/api/sound${sessionParam}`).then(res => {
             this.bilateralSoundActive = res.data.bilateral || false;
           });
-        },
-        handlePreviewResize() {
-          // Re-center preview ball if window size changes
-          if (this.bounceMode === 'horizontal') {
-            this.previewY = Math.floor(200 / 2 - this.previewBallSize / 2);
-          } else if (this.bounceMode === 'vertical') {
-            this.previewX = Math.floor(340 / 2 - this.previewBallSize / 2);
-          }
         }
       },
       mounted() {
         this.getSessionIdFromUrl();
         this.fetchBall();
-        this.previewX = 0;
-        this.previewY = 0;
-        this.previewDirectionX = 1;
-        this.previewDirectionY = 1;
-        this.previewInterval = setInterval(() => {
-          if (this.isMoving) {
-            this.movePreviewBall();
-          }
-        }, 30);
         // Poll for state updates
         this.fetchInterval = setInterval(() => {
           this.fetchBall();
         }, 500);
-        window.addEventListener('resize', this.handlePreviewResize);
       },
       beforeDestroy() {
-        clearInterval(this.previewInterval);
         if (this.fetchInterval) {
           clearInterval(this.fetchInterval);
         }
-        window.removeEventListener('resize', this.handlePreviewResize);
       }
 }
 </script>
@@ -318,40 +234,35 @@ export default {
 }
 .preset-btn {
   padding: 8px 16px;
-  border-radius: 8px;
-  border: none;
-  background: linear-gradient(90deg, #e3f2fd 60%, #64b5f6 100%);
-  color: #1769aa;
-  font-weight: 600;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  background: white;
+  color: #333;
+  font-weight: 500;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(33,150,243,0.10);
-  transition: background 0.2s, transform 0.2s;
-  font-size: 0.95em;
-  line-height: 1.1;
+  transition: all 0.3s ease;
+  font-size: 0.9em;
+  line-height: 1.3;
 }
 .preset-btn:hover {
-  background: linear-gradient(90deg, #2196f3 60%, #64b5f6 100%);
-  color: white;
-  transform: translateY(-2px) scale(1.04);
+  background: #f5f5f5;
+  border-color: #999;
 }
 /* Copy button styling */
 .copy-btn {
   margin-left: 12px;
-  padding: 8px 18px;
+  padding: 12px 28px;
   font-size: 1em;
-  border-radius: 8px;
+  border-radius: 4px;
   border: none;
-  background: linear-gradient(90deg, #64b5f6 60%, #e3f2fd 100%);
-  color: #1769aa;
-  font-weight: 600;
+  background: #4a4a4a;
+  color: white;
+  font-weight: 500;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(33,150,243,0.10);
-  transition: background 0.2s, transform 0.2s;
+  transition: background 0.3s ease;
 }
 .copy-btn:hover {
-  background: linear-gradient(90deg, #2196f3 60%, #64b5f6 100%);
-  color: white;
-  transform: translateY(-2px) scale(1.04);
+  background: #333;
 }
 body {
   margin: 0;
@@ -359,24 +270,29 @@ body {
 }
 .controller-bg {
   min-height: 100vh;
-  background: linear-gradient(135deg, #2196f3 0%, #e3f2fd 100%);
+  background: #f5f5f5;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  padding: 20px 20px 0 20px;
 }
 .controller-card {
   background: white;
-  box-shadow: 0 8px 32px rgba(33,150,243,0.15);
-  border-radius: 24px;
-  padding: 48px 40px 32px 40px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border-radius: 8px;
+  padding: 40px;
   text-align: center;
   min-width: 340px;
+  max-width: 900px;
+  width: 100%;
+  margin-bottom: 20px;
 }
 .controller-card h1 {
   font-size: 2em;
   margin-bottom: 18px;
-  color: #2196f3;
-  font-weight: 700;
+  color: #333;
+  font-weight: 600;
 }
 .controller-buttons {
   display: flex;
@@ -389,16 +305,15 @@ body {
   margin-right: 8px;
 }
 .app-info {
-  background: linear-gradient(90deg, #e3f2fd 0%, #bbdefb 100%);
-  color: #1769aa;
-  border-radius: 12px;
+  background: #f0f0f0;
+  color: #666;
+  border-radius: 6px;
   padding: 12px;
   margin: 18px auto 24px auto;
   text-align: center;
-  font-size: 1.05em;
-  font-weight: 500;
-  box-shadow: 0 2px 8px rgba(33,150,243,0.08);
-  max-width: 340px;
+  font-size: 0.95em;
+  font-weight: 400;
+  max-width: 400px;
 }
 .session-limit-notification {
   background: linear-gradient(90deg, #f44336 0%, #ff9800 100%);
@@ -417,57 +332,127 @@ body {
   font-weight: bold;
 }
 .start-btn, .stop-btn {
-  padding: 14px 32px;
-  font-size: 1.1em;
-  border-radius: 12px;
+  padding: 12px 28px;
+  font-size: 1em;
+  border-radius: 4px;
   border: none;
-  background: linear-gradient(90deg, #2196f3 60%, #64b5f6 100%);
+  background: #4a4a4a;
   color: white;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(33,150,243,0.10);
-  transition: background 0.2s, transform 0.2s;
+  transition: background 0.3s ease;
 }
 .start-btn:hover, .stop-btn:hover {
-  background: linear-gradient(90deg, #1769aa 60%, #2196f3 100%);
-  transform: translateY(-2px) scale(1.04);
+  background: #333;
+}
+.start-btn-active {
+  padding: 12px 28px;
+  font-size: 1em;
+  border-radius: 4px;
+  border: none;
+  background: #4caf50;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  animation: pulse 2s ease-in-out infinite;
+}
+.start-btn-active:hover {
+  background: #45a049;
+}
+.stop-btn-active {
+  padding: 12px 28px;
+  font-size: 1em;
+  border-radius: 4px;
+  border: none;
+  background: #f44336;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+.stop-btn-active:hover {
+  background: #da190b;
 }
 .controls {
   display: flex;
-  flex-wrap: wrap;
-  gap: 24px;
-  justify-content: center;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
   margin-bottom: 20px;
+  width: 100%;
 }
-label {
+.control-row {
+  display: flex;
+  width: 100%;
+  max-width: 300px;
+}
+.control-label {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  font-size: 1em;
-  color: #1769aa;
-  font-weight: 500;
+  font-size: 0.95em;
+  color: #333;
+  width: 100%;
+  gap: 8px;
+}
+.control-label strong {
+  display: block;
+  margin-bottom: 4px;
 }
 input[type="range"] {
-  width: 120px;
+  width: 100%;
 }
-.sound-status-active {
-  background: linear-gradient(90deg, #4caf50 0%, #81c784 100%);
+select {
+  padding: 6px 8px;
+  font-size: 0.95em;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  width: 100%;
+}
+input[type="color"] {
+  width: 50px;
+  height: 35px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.ball-color-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+}
+.sound-btn-off {
+  padding: 12px 28px;
+  font-size: 1em;
+  border-radius: 4px;
+  border: none;
+  background: #e0e0e0;
+  color: #666;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+.sound-btn-off:hover {
+  background: #d0d0d0;
+}
+.sound-btn-on {
+  padding: 12px 28px;
+  font-size: 1em;
+  border-radius: 4px;
+  border: none;
+  background: #4caf50;
   color: white;
-  padding: 12px 24px;
-  border-radius: 12px;
-  font-size: 1.1em;
-  font-weight: 600;
-  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.3s ease;
   animation: pulse 2s ease-in-out infinite;
 }
-.sound-status-inactive {
-  background: linear-gradient(90deg, #9e9e9e 0%, #bdbdbd 100%);
-  color: white;
-  padding: 12px 24px;
-  border-radius: 12px;
-  font-size: 1.1em;
-  font-weight: 600;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+.sound-btn-on:hover {
+  background: #45a049;
 }
 @keyframes pulse {
   0%, 100% {
@@ -478,5 +463,74 @@ input[type="range"] {
     transform: scale(1.05);
     box-shadow: 0 4px 16px rgba(76, 175, 80, 0.5);
   }
+}
+.company-footer {
+  width: 100%;
+  background: #2c2c2c;
+  color: white;
+  padding: 30px 20px;
+  margin-top: auto;
+}
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+.company-info {
+  text-align: left;
+  font-size: 0.9em;
+  line-height: 1.6;
+}
+.company-info strong {
+  font-size: 1.1em;
+  display: block;
+  margin-bottom: 5px;
+}
+.footer-cta {
+  text-align: right;
+  font-size: 1em;
+}
+.contact-link {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+  border-bottom: 2px solid #fff;
+  padding-bottom: 2px;
+  transition: opacity 0.3s ease;
+}
+.contact-link:hover {
+  opacity: 0.8;
+}
+@media (max-width: 768px) {
+  .footer-content {
+    flex-direction: column;
+    text-align: center;
+  }
+  .company-info, .footer-cta {
+    text-align: center;
+  }
+}
+.patient-link {
+  margin-bottom: 20px;
+  font-size: 0.95em;
+  color: #333;
+}
+.patient-link a {
+  color: #4a4a4a;
+  text-decoration: none;
+  border-bottom: 1px solid #4a4a4a;
+}
+.patient-link a:hover {
+  color: #000;
+  border-bottom-color: #000;
+}
+.instructions {
+  margin-bottom: 16px;
+  color: #666;
+  font-size: 0.95em;
 }
 </style>
