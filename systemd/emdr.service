@@ -13,7 +13,6 @@ WorkingDirectory=/var/www/remote-emdr/backend
 Environment="PATH=/var/www/remote-emdr/venv/bin:/usr/local/bin:/usr/bin:/bin"
 Environment="PYTHONPATH=/var/www/remote-emdr/backend"
 Environment="FLASK_ENV=production"
-Environment="SESSION_SECRET=CHANGE_THIS_TO_RANDOM_SECRET_KEY"
 ExecStart=/var/www/remote-emdr/venv/bin/gunicorn --config /var/www/remote-emdr/gunicorn.conf.py app:app
 ExecReload=/bin/kill -s HUP $MAINPID
 KillMode=mixed

@@ -1,32 +1,20 @@
-from flask import Flask, request, jsonify, send_from_directory, session
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import os
-import secrets
 
 app = Flask(__name__, static_folder="../frontend/dist")
 
-# Use environment variable for secret key in production
-SECRET_KEY = os.environ.get("SESSION_SECRET")
-if not SECRET_KEY:
-    if os.environ.get("FLASK_ENV") == "production":
-        raise ValueError("SESSION_SECRET environment variable must be set in production")
-    # Development fallback
-    SECRET_KEY = "dev-secret-key-change-in-production"
-    
-app.secret_key = SECRET_KEY
-import uuid
+# Enable CORS for all routes
 CORS(app)
 
 def get_session_id():
-    # First try to get session from URL query parameter
+    # Get session from URL query parameter - REQUIRED
     session_id_from_url = request.args.get('session')
-    if session_id_from_url:
-        return session_id_from_url
-    
-    # Fall back to cookie-based session
-    if "session_id" not in session:
-        session["session_id"] = str(uuid.uuid4())
-    return session["session_id"]
+    if not session_id_from_url:
+        # Return None if no session ID provided
+        # This will cause an error which we handle in get_session_state
+        return None
+    return session_id_from_url
 
 session_states = {}
 
@@ -66,6 +54,14 @@ def set_sound_state():
 
 def get_session_state():
     session_id = get_session_id()
+    
+    # Require session ID in URL
+    if session_id is None:
+        return jsonify({
+            "error": True,
+            "message": "Session ID required. Please access the app through the therapist control panel."
+        }), 400
+    
     # Limit to 50 simultaneous sessions
     if session_id not in session_states:
         if len(session_states) >= 50:

@@ -61,9 +61,6 @@ npm run build
 echo -e "${YELLOW}Step 6: Setting up systemd service...${NC}"
 # Copy systemd service file from the original script directory
 cp $SCRIPT_DIR/systemd/emdr.service /etc/systemd/system/
-# Generate random secret key
-SECRET_KEY=$(python3 -c 'import secrets; print(secrets.token_hex(32))')
-sed -i "s/CHANGE_THIS_TO_RANDOM_SECRET_KEY/$SECRET_KEY/" /etc/systemd/system/emdr.service
 
 systemctl daemon-reload
 systemctl enable emdr.service
