@@ -202,7 +202,10 @@ sudo systemctl restart emdr
 cd frontend
 npm run build
 cd ..
-sudo systemctl restart nginx
+
+# Update nginx config if changed
+sudo cp /path/to/new/nginx.conf /etc/nginx/sites-available/remote-emdr.nl
+sudo nginx -t && sudo systemctl reload nginx
 ```
 
 ### SSL Certificate Renewal

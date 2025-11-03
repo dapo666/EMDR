@@ -12,8 +12,9 @@ cpu_count = multiprocessing.cpu_count()
 workers = min(cpu_count * 2 + 1, 5)  # Max 5 workers for resource efficiency
 worker_class = "sync"
 worker_connections = 1000
-timeout = 60
-keepalive = 5
+timeout = 300  # Longer timeout for polling connections
+keepalive = 65  # Keep connections alive longer (matches nginx)
+threads = 2  # Add threads for better concurrency with polling
 
 # Logging
 accesslog = "/var/log/gunicorn/access.log"
