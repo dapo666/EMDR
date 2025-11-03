@@ -50,13 +50,15 @@ def get_sound_state():
 def set_sound_state():
     data = request.json
     session_id = get_session_id()
-    print(f"[SOUND] Session {session_id}: Setting bilateral to {data.get('bilateral')}")
+    client_ip = request.remote_addr
+    print(f"[SOUND POST] Session {session_id} from IP {client_ip}: Setting bilateral to {data.get('bilateral')}")
     state = get_session_state()
     if isinstance(state, tuple):  # Error response
         return state
+    old_value = state["sound_state"]["bilateral"]
     state["sound_state"]["bilateral"] = data.get("bilateral", state["sound_state"]["bilateral"])
     state["sound_state"]["speed"] = data.get("speed", state["sound_state"]["speed"])
-    print(f"[SOUND] Session {session_id}: New state = {state['sound_state']}")
+    print(f"[SOUND POST] Session {session_id}: Changed from {old_value} to {state['sound_state']['bilateral']}")
     return jsonify(state["sound_state"])
 
 def get_session_state():
@@ -64,6 +66,7 @@ def get_session_state():
     
     # Require session ID in URL
     if session_id is None:
+        print("[ERROR] No session ID provided!")
         return jsonify({
             "error": True,
             "message": "Session ID required. Please access the app through the therapist control panel."
@@ -76,6 +79,7 @@ def get_session_state():
                 "error": True,
                 "message": "Max session limit reached for free version. To allow new connection please subscribe to paid version. You can contact us by email: info@expatpsychologie.nl"
             }), 429
+        print(f"[SESSION] Creating new session: {session_id}")
         session_states[session_id] = get_default_state()
     return session_states[session_id]
 @app.route("/api/background", methods=["GET"])
@@ -124,6 +128,21 @@ def get_session_count():
         "count": len(session_states),
         "limit": 50,
         "limitReached": len(session_states) >= 50
+    })
+
+@app.route("/api/debug/sessions", methods=["GET"])
+def debug_sessions():
+    """Debug endpoint to see all active sessions"""
+    sessions_info = {}
+    for sid, state in session_states.items():
+        sessions_info[sid] = {
+            "backgroundColor": state["background_state"]["backgroundColor"],
+            "bilateral": state["sound_state"]["bilateral"],
+            "isMoving": state["ball_state"]["isMoving"]
+        }
+    return jsonify({
+        "total": len(session_states),
+        "sessions": sessions_info
     })
 
 @app.route("/api/ball", methods=["GET"])

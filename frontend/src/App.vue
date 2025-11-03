@@ -367,7 +367,7 @@ html, body, .container {
 .container {
   position: relative;
   overflow: hidden;
-  background: white !important;
+  /* Background color controlled by :style binding */
   /* Enable hardware acceleration for better performance */
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
