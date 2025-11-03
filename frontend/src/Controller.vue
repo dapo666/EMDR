@@ -74,7 +74,8 @@
         <div class="company-info">
           <strong>DRP CONSULTING</strong><br>
           KVK: 85650595<br>
-          © 2025
+          © 2025<br>
+          <span class="version">v2025.11.01</span>
         </div>
         <div class="footer-cta">
           Interested in developing your own application? 
@@ -210,16 +211,12 @@ export default {
       },
       mounted() {
         this.getSessionIdFromUrl();
+        // Only fetch initial state once - don't poll!
+        // Controller sends updates, Patient receives them
         this.fetchBall();
-        // Poll for state updates
-        this.fetchInterval = setInterval(() => {
-          this.fetchBall();
-        }, 500);
       },
       beforeDestroy() {
-        if (this.fetchInterval) {
-          clearInterval(this.fetchInterval);
-        }
+        // No polling interval to clear
       }
 }
 </script>
@@ -504,6 +501,12 @@ input[type="color"] {
 }
 .contact-link:hover {
   opacity: 0.8;
+}
+.version {
+  font-size: 0.8em;
+  color: #999;
+  margin-top: 5px;
+  display: inline-block;
 }
 @media (max-width: 768px) {
   .footer-content {
