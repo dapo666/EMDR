@@ -287,6 +287,10 @@ export default {
         this.moveBall();
       }
       this.animationFrame = requestAnimationFrame(this.animate);
+    },
+    getSessionIdFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      this.sessionId = params.get('session') || '';
     }
   },
   mounted() {
