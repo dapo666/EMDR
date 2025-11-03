@@ -167,6 +167,11 @@ export default {
     async fetchBall() {
       const sessionParam = this.sessionId ? `?session=${this.sessionId}` : '';
       
+      if (!this.sessionId) {
+        console.error('Patient: No session ID!');
+        return;
+      }
+      
       try {
         // Fetch all state in parallel
         const [ballRes, bgRes, colorRes, soundRes] = await Promise.all([
@@ -197,7 +202,7 @@ export default {
         // Update background
         const newBgColor = bgRes.data.backgroundColor || '#ffffff';
         if (newBgColor !== this.backgroundColor) {
-          console.log(`Background color changed from ${this.backgroundColor} to ${newBgColor}`);
+          console.log(`[PATIENT] Background color changed from ${this.backgroundColor} to ${newBgColor}`);
         }
         this.backgroundColor = newBgColor;
         
@@ -217,13 +222,17 @@ export default {
         // Update bilateral sound
         const backendBilateral = soundRes.data.bilateral === true;
         if (backendBilateral && !this.bilateralSoundActive) {
-          console.log('Backend says ON, starting bilateral sound');
+          console.log('[PATIENT] Backend says ON, starting bilateral sound');
           this.bilateralSoundActive = true;
           this.startBilateralSound();
         } else if (!backendBilateral && this.bilateralSoundActive) {
-          console.log('Backend says OFF, stopping bilateral sound');
+          console.log('[PATIENT] Backend says OFF, stopping bilateral sound');
           this.bilateralSoundActive = false;
           this.stopBilateralSound();
+        }
+        // Debug: log every 10th poll to avoid console spam
+        if (Math.random() < 0.1) {
+          console.log(`[PATIENT] Poll: bilateral=${backendBilateral}, bg=${newBgColor}, moving=${this.isMoving}`);
         }
       } catch (error) {
         console.error('Error fetching state:', error);
@@ -244,17 +253,17 @@ export default {
     // Bilateral sound logic
     startBilateralSound() {
       if (!this.audioUnlocked || !this.audioCtx || !this.beepBuffer) {
-        console.log('Cannot start bilateral sound - audio not ready');
+        console.log('[PATIENT] Cannot start bilateral sound - audio not ready');
         return;
       }
       
-      // Stop any existing timer first
+      // Prevent restarting if already running
       if (this.bilateralSoundTimer) {
-        clearInterval(this.bilateralSoundTimer);
-        this.bilateralSoundTimer = null;
+        console.log('[PATIENT] Bilateral sound already running, skipping restart');
+        return;
       }
       
-      console.log('Starting bilateral sound');
+      console.log('[PATIENT] Starting bilateral sound');
       this.bilateralSoundTimer = setInterval(() => {
         const source = this.audioCtx.createBufferSource();
         source.buffer = this.beepBuffer;
@@ -281,7 +290,7 @@ export default {
       }, this.bilateralSpeed);
     },
     stopBilateralSound() {
-      console.log('Stopping bilateral sound');
+      console.log('[PATIENT] Stopping bilateral sound');
       if (this.bilateralSoundTimer) {
         clearInterval(this.bilateralSoundTimer);
         this.bilateralSoundTimer = null;
@@ -299,6 +308,7 @@ export default {
     // Get session ID from URL
     const urlParams = new URLSearchParams(window.location.search);
     this.sessionId = urlParams.get('session') || '';
+    console.log(`[PATIENT] Loaded with session ID: ${this.sessionId}`);
     this.fetchBall();
     // Use requestAnimationFrame for smooth animation across all browsers
     this.animate();

@@ -187,8 +187,12 @@ export default {
         },
         updateBackground() {
           const sessionParam = this.sessionId ? `?session=${this.sessionId}` : '';
+          console.log(`[CONTROLLER] Sending background color: ${this.backgroundColor}`);
           axios.post(`/api/background${sessionParam}`, { backgroundColor: this.backgroundColor })
-            .catch(err => console.error('Error updating background:', err));
+            .then(response => {
+              console.log('[CONTROLLER] Background updated:', response.data);
+            })
+            .catch(err => console.error('[CONTROLLER] Error updating background:', err));
         },
         updateBallColor() {
           const sessionParam = this.sessionId ? `?session=${this.sessionId}` : '';
@@ -235,6 +239,7 @@ export default {
       },
       mounted() {
         this.getSessionIdFromUrl();
+        console.log(`[CONTROLLER] Loaded with session ID: ${this.sessionId}`);
         // Only fetch initial state once - don't poll!
         // Controller sends updates, Patient receives them
         this.fetchBall();
