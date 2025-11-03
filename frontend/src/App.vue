@@ -56,7 +56,7 @@ export default {
     },
     containerStyle() {
       return {
-        background: 'white'
+        background: this.backgroundColor
       };
     }
   },
@@ -211,10 +211,13 @@ export default {
         }
         
         // Update bilateral sound
-        if (soundRes.data.bilateral && !this.bilateralSoundActive) {
+        const backendBilateral = soundRes.data.bilateral === true;
+        if (backendBilateral && !this.bilateralSoundActive) {
+          console.log('Backend says ON, starting bilateral sound');
           this.bilateralSoundActive = true;
           this.startBilateralSound();
-        } else if (!soundRes.data.bilateral && this.bilateralSoundActive) {
+        } else if (!backendBilateral && this.bilateralSoundActive) {
+          console.log('Backend says OFF, stopping bilateral sound');
           this.bilateralSoundActive = false;
           this.stopBilateralSound();
         }
@@ -236,7 +239,18 @@ export default {
     },
     // Bilateral sound logic
     startBilateralSound() {
-      if (!this.audioUnlocked || !this.audioCtx || !this.beepBuffer) return;
+      if (!this.audioUnlocked || !this.audioCtx || !this.beepBuffer) {
+        console.log('Cannot start bilateral sound - audio not ready');
+        return;
+      }
+      
+      // Stop any existing timer first
+      if (this.bilateralSoundTimer) {
+        clearInterval(this.bilateralSoundTimer);
+        this.bilateralSoundTimer = null;
+      }
+      
+      console.log('Starting bilateral sound');
       this.bilateralSoundTimer = setInterval(() => {
         const source = this.audioCtx.createBufferSource();
         source.buffer = this.beepBuffer;
@@ -263,8 +277,11 @@ export default {
       }, this.bilateralSpeed);
     },
     stopBilateralSound() {
-      clearInterval(this.bilateralSoundTimer);
-      // No need to pause, as beep is short and played via buffer
+      console.log('Stopping bilateral sound');
+      if (this.bilateralSoundTimer) {
+        clearInterval(this.bilateralSoundTimer);
+        this.bilateralSoundTimer = null;
+      }
     },
     animate() {
       if (this.isMoving) {
