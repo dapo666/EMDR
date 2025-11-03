@@ -7,6 +7,17 @@ app = Flask(__name__, static_folder="../frontend/dist")
 # Enable CORS for all routes
 CORS(app)
 
+# Track requests for debugging
+request_counter = 0
+
+@app.before_request
+def log_request():
+    global request_counter
+    request_counter += 1
+    if request.path.startswith('/api/'):
+        session_id = request.args.get('session', 'NONE')
+        print(f"[REQ #{request_counter}] {request.method} {request.path} session={session_id}")
+
 def get_session_id():
     # Get session from URL query parameter - REQUIRED
     session_id_from_url = request.args.get('session')
@@ -19,6 +30,7 @@ def get_session_id():
 session_states = {}
 
 def get_default_state():
+    import time
     return {
         "ball_state": {
             "speed": 5,
@@ -32,11 +44,17 @@ def get_default_state():
         "ball_color_state": {
             "ballColor": "#2196f3",
             "randomColor": False
-        }
-        ,
+        },
         "sound_state": {
             "bilateral": False,
             "speed": 500
+        },
+        "_meta": {
+            "created": time.time(),
+            "last_bg_change": 0,
+            "last_sound_change": 0,
+            "bg_change_count": 0,
+            "sound_change_count": 0
         }
     }
 @app.route("/api/sound", methods=["GET"])
@@ -48,6 +66,7 @@ def get_sound_state():
 
 @app.route("/api/sound", methods=["POST"])
 def set_sound_state():
+    import time
     data = request.json
     session_id = get_session_id()
     client_ip = request.remote_addr
@@ -56,9 +75,12 @@ def set_sound_state():
     if isinstance(state, tuple):  # Error response
         return state
     old_value = state["sound_state"]["bilateral"]
-    state["sound_state"]["bilateral"] = data.get("bilateral", state["sound_state"]["bilateral"])
+    new_value = data.get("bilateral", old_value)
+    state["sound_state"]["bilateral"] = new_value
     state["sound_state"]["speed"] = data.get("speed", state["sound_state"]["speed"])
-    print(f"[SOUND POST] Session {session_id}: Changed from {old_value} to {state['sound_state']['bilateral']}")
+    state["_meta"]["last_sound_change"] = time.time()
+    state["_meta"]["sound_change_count"] += 1
+    print(f"[SOUND POST] Session {session_id}: Changed from {old_value} to {new_value} (change #{state['_meta']['sound_change_count']}) IP={client_ip}")
     return jsonify(state["sound_state"])
 
 def get_session_state():
@@ -93,14 +115,20 @@ def get_background():
 
 @app.route("/api/background", methods=["POST"])
 def set_background():
+    import time
     data = request.json
     session_id = get_session_id()
-    print(f"[BACKGROUND] Session {session_id}: Setting color to {data.get('backgroundColor')}")
+    client_ip = request.remote_addr
+    print(f"[BACKGROUND POST] Session {session_id} from IP {client_ip}: Setting color to {data.get('backgroundColor')}")
     state = get_session_state()
     if isinstance(state, tuple):  # Error response
         return state
-    state["background_state"]["backgroundColor"] = data.get("backgroundColor", state["background_state"]["backgroundColor"])
-    print(f"[BACKGROUND] Session {session_id}: New state = {state['background_state']}")
+    old_color = state["background_state"]["backgroundColor"]
+    new_color = data.get("backgroundColor", old_color)
+    state["background_state"]["backgroundColor"] = new_color
+    state["_meta"]["last_bg_change"] = time.time()
+    state["_meta"]["bg_change_count"] += 1
+    print(f"[BACKGROUND POST] Session {session_id}: Changed from {old_color} to {new_color} (change #{state['_meta']['bg_change_count']})")
     return jsonify(state["background_state"])
 
 @app.route("/api/ballcolor", methods=["GET"])
