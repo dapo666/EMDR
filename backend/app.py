@@ -67,10 +67,19 @@ def get_sound_state():
 @app.route("/api/sound", methods=["POST"])
 def set_sound_state():
     import time
+    import traceback
     data = request.json
     session_id = get_session_id()
     client_ip = request.remote_addr
-    print(f"[SOUND POST] Session {session_id} from IP {client_ip}: Setting bilateral to {data.get('bilateral')}")
+    user_agent = request.headers.get('User-Agent', 'UNKNOWN')
+    print(f"\n{'='*80}")
+    print(f"[SOUND POST] Session {session_id} from IP {client_ip}")
+    print(f"[SOUND POST] User-Agent: {user_agent}")
+    print(f"[SOUND POST] Request data: {data}")
+    print(f"[SOUND POST] Stack trace:")
+    for line in traceback.format_stack()[:-1]:
+        print(line.strip())
+    print(f"{'='*80}\n")
     state = get_session_state()
     if isinstance(state, tuple):  # Error response
         return state
@@ -80,7 +89,7 @@ def set_sound_state():
     state["sound_state"]["speed"] = data.get("speed", state["sound_state"]["speed"])
     state["_meta"]["last_sound_change"] = time.time()
     state["_meta"]["sound_change_count"] += 1
-    print(f"[SOUND POST] Session {session_id}: Changed from {old_value} to {new_value} (change #{state['_meta']['sound_change_count']}) IP={client_ip}")
+    print(f"[SOUND POST] ✓ Session {session_id}: Changed from {old_value} to {new_value} (change #{state['_meta']['sound_change_count']}) IP={client_ip}")
     return jsonify(state["sound_state"])
 
 def get_session_state():
@@ -116,19 +125,25 @@ def get_background():
 @app.route("/api/background", methods=["POST"])
 def set_background():
     import time
+    import traceback
     data = request.json
     session_id = get_session_id()
     client_ip = request.remote_addr
-    print(f"[BACKGROUND POST] Session {session_id} from IP {client_ip}: Setting color to {data.get('backgroundColor')}")
+    user_agent = request.headers.get('User-Agent', 'UNKNOWN')
+    print(f"\n{'='*80}")
+    print(f"[BACKGROUND POST] Session {session_id} from IP {client_ip}")
+    print(f"[BACKGROUND POST] User-Agent: {user_agent}")
+    print(f"[BACKGROUND POST] Request data: {data}")
+    print(f"{'='*80}\n")
     state = get_session_state()
     if isinstance(state, tuple):  # Error response
         return state
-    old_color = state["background_state"]["backgroundColor"]
-    new_color = data.get("backgroundColor", old_color)
-    state["background_state"]["backgroundColor"] = new_color
+    old_value = state["background_state"]["backgroundColor"]
+    new_value = data.get("backgroundColor", old_value)
+    state["background_state"]["backgroundColor"] = new_value
     state["_meta"]["last_bg_change"] = time.time()
     state["_meta"]["bg_change_count"] += 1
-    print(f"[BACKGROUND POST] Session {session_id}: Changed from {old_color} to {new_color} (change #{state['_meta']['bg_change_count']})")
+    print(f"[BACKGROUND POST] ✓ Session {session_id}: Changed from {old_value} to {new_value} (change #{state['_meta']['bg_change_count']}) IP={client_ip}")
     return jsonify(state["background_state"])
 
 @app.route("/api/ballcolor", methods=["GET"])
