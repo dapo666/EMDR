@@ -130,11 +130,17 @@ export default {
         startBilateralSound() {
           const sessionParam = this.sessionId ? `?session=${this.sessionId}` : '';
           axios.post(`/api/sound${sessionParam}`, { bilateral: true, speed: 500 })
+            .then(() => {
+              this.bilateralSoundActive = true;
+            })
             .catch(err => console.error('Error starting bilateral sound:', err));
         },
         stopBilateralSound() {
           const sessionParam = this.sessionId ? `?session=${this.sessionId}` : '';
           axios.post(`/api/sound${sessionParam}`, { bilateral: false, speed: 500 })
+            .then(() => {
+              this.bilateralSoundActive = false;
+            })
             .catch(err => console.error('Error stopping bilateral sound:', err));
         },
         updateBallSize() {
@@ -164,7 +170,9 @@ export default {
           axios.post(`/api/ball${sessionParam}`, { speed: this.speed, bounceMode: this.bounceMode, isMoving: false, ballSize: this.ballSize })
             .catch(err => console.error('Error stopping ball:', err));
           // Also stop bilateral sound when stopping ball movement
-          this.stopBilateralSound();
+          if (this.bilateralSoundActive) {
+            this.stopBilateralSound(); // This will update bilateralSoundActive after POST
+          }
         },
         startBall() {
           this.isMoving = true;

@@ -195,7 +195,11 @@ export default {
         this.lastBounceMode = this.bounceMode;
         
         // Update background
-        this.backgroundColor = bgRes.data.backgroundColor || '#ffffff';
+        const newBgColor = bgRes.data.backgroundColor || '#ffffff';
+        if (newBgColor !== this.backgroundColor) {
+          console.log(`Background color changed from ${this.backgroundColor} to ${newBgColor}`);
+        }
+        this.backgroundColor = newBgColor;
         
         // Update ball color
         const newRandomColor = colorRes.data.randomColor || false;
@@ -300,9 +304,10 @@ export default {
     this.animate();
     
     // Single unified polling interval - fetch ALL state together
+    // 500ms for responsive updates (background color, bilateral sound)
     this.fetchInterval = setInterval(() => {
       this.fetchBall();
-    }, 1000); // Reduced to 1 second to reduce load
+    }, 500);
   },
   beforeDestroy() {
     if (this.animationFrame) {

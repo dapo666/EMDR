@@ -49,11 +49,14 @@ def get_sound_state():
 @app.route("/api/sound", methods=["POST"])
 def set_sound_state():
     data = request.json
+    session_id = get_session_id()
+    print(f"[SOUND] Session {session_id}: Setting bilateral to {data.get('bilateral')}")
     state = get_session_state()
     if isinstance(state, tuple):  # Error response
         return state
     state["sound_state"]["bilateral"] = data.get("bilateral", state["sound_state"]["bilateral"])
     state["sound_state"]["speed"] = data.get("speed", state["sound_state"]["speed"])
+    print(f"[SOUND] Session {session_id}: New state = {state['sound_state']}")
     return jsonify(state["sound_state"])
 
 def get_session_state():
@@ -80,15 +83,20 @@ def get_background():
     state = get_session_state()
     if isinstance(state, tuple):  # Error response
         return state
+    session_id = get_session_id()
+    print(f"[BACKGROUND] Session {session_id}: GET returning {state['background_state']}")
     return jsonify(state["background_state"])
 
 @app.route("/api/background", methods=["POST"])
 def set_background():
     data = request.json
+    session_id = get_session_id()
+    print(f"[BACKGROUND] Session {session_id}: Setting color to {data.get('backgroundColor')}")
     state = get_session_state()
     if isinstance(state, tuple):  # Error response
         return state
     state["background_state"]["backgroundColor"] = data.get("backgroundColor", state["background_state"]["backgroundColor"])
+    print(f"[BACKGROUND] Session {session_id}: New state = {state['background_state']}")
     return jsonify(state["background_state"])
 
 @app.route("/api/ballcolor", methods=["GET"])
