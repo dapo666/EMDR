@@ -1,9 +1,19 @@
 from flask import Flask, request, jsonify, send_from_directory, session
 from flask_cors import CORS
 import os
+import secrets
 
 app = Flask(__name__, static_folder="../frontend/dist")
-app.secret_key = os.environ.get("SESSION_SECRET", "supersecretkey")
+
+# Use environment variable for secret key in production
+SECRET_KEY = os.environ.get("SESSION_SECRET")
+if not SECRET_KEY:
+    if os.environ.get("FLASK_ENV") == "production":
+        raise ValueError("SESSION_SECRET environment variable must be set in production")
+    # Development fallback
+    SECRET_KEY = "dev-secret-key-change-in-production"
+    
+app.secret_key = SECRET_KEY
 import uuid
 CORS(app)
 

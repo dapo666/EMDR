@@ -1,0 +1,28 @@
+# Systemd service file for EMDR application
+# Place this in /etc/systemd/system/emdr.service
+
+[Unit]
+Description=EMDR Therapy Application
+After=network.target
+
+[Service]
+Type=exec
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/remote-emdr/backend
+Environment="PATH=/var/www/remote-emdr/venv/bin:/usr/local/bin:/usr/bin:/bin"
+Environment="PYTHONPATH=/var/www/remote-emdr/backend"
+Environment="FLASK_ENV=production"
+Environment="SESSION_SECRET=CHANGE_THIS_TO_RANDOM_SECRET_KEY"
+ExecStart=/var/www/remote-emdr/venv/bin/gunicorn --config /var/www/remote-emdr/gunicorn.conf.py app:app
+ExecReload=/bin/kill -s HUP $MAINPID
+KillMode=mixed
+TimeoutStopSec=5
+PrivateTmp=true
+Restart=always
+RestartSec=10
+StandardOutput=append:/var/log/gunicorn/stdout.log
+StandardError=append:/var/log/gunicorn/stderr.log
+
+[Install]
+WantedBy=multi-user.target
