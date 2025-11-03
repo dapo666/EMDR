@@ -19,6 +19,9 @@ RED='\033[0;31m'
 NC='\033[0m' # No Color
 
 echo -e "${YELLOW}Step 1: Installing system dependencies...${NC}"
+# Store the script directory before we change directories
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 apt-get update
 apt-get install -y python3 python3-pip python3-venv python3-dev build-essential \
     nginx certbot python3-certbot-nginx git curl wget
@@ -56,8 +59,7 @@ npm install
 npm run build
 
 echo -e "${YELLOW}Step 6: Setting up systemd service...${NC}"
-# Copy systemd service file from the current directory
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Copy systemd service file from the original script directory
 cp $SCRIPT_DIR/systemd/emdr.service /etc/systemd/system/
 # Generate random secret key
 SECRET_KEY=$(python3 -c 'import secrets; print(secrets.token_hex(32))')
