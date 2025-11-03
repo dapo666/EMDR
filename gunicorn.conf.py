@@ -6,15 +6,15 @@ import os
 bind = "127.0.0.1:5000"
 backlog = 2048
 
-# Worker processes - limit for VPS
-# On small VPS (2 cores), use fewer workers
-cpu_count = multiprocessing.cpu_count()
-workers = min(cpu_count * 2 + 1, 5)  # Max 5 workers for resource efficiency
-worker_class = "sync"
+# Worker processes - USE 1 WORKER for in-memory session state!
+# Multiple workers each have separate memory, breaking session state
+# Use threads for concurrency instead
+workers = 1  # MUST be 1 for in-memory session_states dict to work
+worker_class = "gthread"  # Use threads for concurrency
 worker_connections = 1000
 timeout = 300  # Longer timeout for polling connections
 keepalive = 65  # Keep connections alive longer (matches nginx)
-threads = 2  # Add threads for better concurrency with polling
+threads = 4  # Use more threads to handle concurrent requests
 
 # Logging
 accesslog = "/var/log/gunicorn/access.log"
