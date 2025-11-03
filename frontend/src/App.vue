@@ -164,40 +164,63 @@ export default {
         this.positionY = Math.max(minY, Math.min(maxY, this.positionY));
       }
     },
-    fetchBall() {
+    async fetchBall() {
       const sessionParam = this.sessionId ? `?session=${this.sessionId}` : '';
-      axios.get(`/api/ball${sessionParam}`).then(res => {
-        this.speed = res.data.speed;
-        this.bounceMode = res.data.bounceMode || 'horizontal';
-        this.isMoving = res.data.isMoving || false;
-        if (res.data.ballSize !== undefined) {
-          this.ballSize = res.data.ballSize;
+      
+      try {
+        // Fetch all state in parallel
+        const [ballRes, bgRes, colorRes, soundRes] = await Promise.all([
+          axios.get(`/api/ball${sessionParam}`),
+          axios.get(`/api/background${sessionParam}`),
+          axios.get(`/api/ballcolor${sessionParam}`),
+          axios.get(`/api/sound${sessionParam}`)
+        ]);
+        
+        // Update ball state
+        this.speed = ballRes.data.speed;
+        this.bounceMode = ballRes.data.bounceMode || 'horizontal';
+        this.isMoving = ballRes.data.isMoving || false;
+        if (ballRes.data.ballSize !== undefined) {
+          this.ballSize = ballRes.data.ballSize;
         }
-        if (this.bounceMode === 'vertical' && typeof this.lastBounceMode !== 'undefined' && this.lastBounceMode !== 'vertical') {
-          const width = window.innerWidth;
-          this.positionX = Math.floor(width / 2 - this.ballSize / 2);
-          this.positionY = 0;
+        
+        // If bounce mode changed, reset position to center
+        if (this.bounceMode !== this.lastBounceMode) {
+          this.x = window.innerWidth / 2;
+          this.y = window.innerHeight / 2;
+          this.vx = this.speed;
+          this.vy = this.speed;
+          this.angle = 0;
         }
         this.lastBounceMode = this.bounceMode;
-      });
-      axios.get(`/api/background${sessionParam}`).then(res => {
-        this.backgroundColor = res.data.backgroundColor || '#ffffff';
-      });
-      axios.get(`/api/ballcolor${sessionParam}`).then(res => {
-        const newRandomColor = res.data.randomColor || false;
         
-        // Start or stop random color changing
+        // Update background
+        this.backgroundColor = bgRes.data.backgroundColor || '#ffffff';
+        
+        // Update ball color
+        const newRandomColor = colorRes.data.randomColor || false;
         if (newRandomColor && !this.randomColor) {
           this.randomColor = true;
           this.startRandomColor();
         } else if (!newRandomColor && this.randomColor) {
           this.randomColor = false;
           this.stopRandomColor();
-          this.ballColor = res.data.ballColor || '#2196f3';
+          this.ballColor = colorRes.data.ballColor || '#2196f3';
         } else if (!newRandomColor) {
-          this.ballColor = res.data.ballColor || '#2196f3';
+          this.ballColor = colorRes.data.ballColor || '#2196f3';
         }
-      });
+        
+        // Update bilateral sound
+        if (soundRes.data.bilateral && !this.bilateralSoundActive) {
+          this.bilateralSoundActive = true;
+          this.startBilateralSound();
+        } else if (!soundRes.data.bilateral && this.bilateralSoundActive) {
+          this.bilateralSoundActive = false;
+          this.stopBilateralSound();
+        }
+      } catch (error) {
+        console.error('Error fetching state:', error);
+      }
     },
     startRandomColor() {
       if (this.colorChangeInterval) return;
@@ -212,19 +235,6 @@ export default {
       }
     },
     // Bilateral sound logic
-    checkBilateralSound() {
-      const sessionParam = this.sessionId ? `?session=${this.sessionId}` : '';
-      axios.get(`/api/sound${sessionParam}`)
-        .then(res => {
-          if (res.data.bilateral && !this.bilateralSoundActive) {
-            this.bilateralSoundActive = true;
-            this.startBilateralSound();
-          } else if (!res.data.bilateral && this.bilateralSoundActive) {
-            this.bilateralSoundActive = false;
-            this.stopBilateralSound();
-          }
-        });
-    },
     startBilateralSound() {
       if (!this.audioUnlocked || !this.audioCtx || !this.beepBuffer) return;
       this.bilateralSoundTimer = setInterval(() => {
@@ -271,21 +281,19 @@ export default {
     this.fetchBall();
     // Use requestAnimationFrame for smooth animation across all browsers
     this.animate();
+    
+    // Single unified polling interval - fetch ALL state together
     this.fetchInterval = setInterval(() => {
       this.fetchBall();
-    }, 500);
-
-    // Bilateral sound polling
-    this.soundInterval = setInterval(() => {
-      this.checkBilateralSound();
-    }, 500);
+    }, 1000); // Reduced to 1 second to reduce load
   },
   beforeDestroy() {
     if (this.animationFrame) {
       cancelAnimationFrame(this.animationFrame);
     }
-    clearInterval(this.fetchInterval);
-    clearInterval(this.soundInterval);
+    if (this.fetchInterval) {
+      clearInterval(this.fetchInterval);
+    }
     if (this.bilateralSoundTimer) {
       clearInterval(this.bilateralSoundTimer);
     }

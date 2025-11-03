@@ -119,20 +119,26 @@ export default {
         toggleBilateralSound() {
           const sessionParam = this.sessionId ? `?session=${this.sessionId}` : '';
           const newState = !this.bilateralSoundActive;
-          axios.post(`/api/sound${sessionParam}`, { bilateral: newState, speed: 500 });
-          this.bilateralSoundActive = newState;
+          axios.post(`/api/sound${sessionParam}`, { bilateral: newState, speed: 500 })
+            .then(() => {
+              this.bilateralSoundActive = newState;
+            })
+            .catch(err => console.error('Error toggling bilateral sound:', err));
         },
         startBilateralSound() {
           const sessionParam = this.sessionId ? `?session=${this.sessionId}` : '';
-          axios.post(`/api/sound${sessionParam}`, { bilateral: true, speed: 500 });
+          axios.post(`/api/sound${sessionParam}`, { bilateral: true, speed: 500 })
+            .catch(err => console.error('Error starting bilateral sound:', err));
         },
         stopBilateralSound() {
           const sessionParam = this.sessionId ? `?session=${this.sessionId}` : '';
-          axios.post(`/api/sound${sessionParam}`, { bilateral: false, speed: 500 });
+          axios.post(`/api/sound${sessionParam}`, { bilateral: false, speed: 500 })
+            .catch(err => console.error('Error stopping bilateral sound:', err));
         },
         updateBallSize() {
           const sessionParam = this.sessionId ? `?session=${this.sessionId}` : '';
-          axios.post(`/api/ball${sessionParam}`, { speed: this.speed, bounceMode: this.bounceMode, isMoving: this.isMoving, ballSize: this.ballSize });
+          axios.post(`/api/ball${sessionParam}`, { speed: this.speed, bounceMode: this.bounceMode, isMoving: this.isMoving, ballSize: this.ballSize })
+            .catch(err => console.error('Error updating ball size:', err));
         },
         getSessionIdFromUrl() {
           const params = new URLSearchParams(window.location.search);
@@ -153,33 +159,40 @@ export default {
         stopBall() {
           this.isMoving = false;
           const sessionParam = this.sessionId ? `?session=${this.sessionId}` : '';
-          axios.post(`/api/ball${sessionParam}`, { speed: this.speed, bounceMode: this.bounceMode, isMoving: false, ballSize: this.ballSize });
+          axios.post(`/api/ball${sessionParam}`, { speed: this.speed, bounceMode: this.bounceMode, isMoving: false, ballSize: this.ballSize })
+            .catch(err => console.error('Error stopping ball:', err));
           // Also stop bilateral sound when stopping ball movement
           this.stopBilateralSound();
         },
         startBall() {
           this.isMoving = true;
           const sessionParam = this.sessionId ? `?session=${this.sessionId}` : '';
-          axios.post(`/api/ball${sessionParam}`, { speed: this.speed, bounceMode: this.bounceMode, isMoving: true, ballSize: this.ballSize });
+          axios.post(`/api/ball${sessionParam}`, { speed: this.speed, bounceMode: this.bounceMode, isMoving: true, ballSize: this.ballSize })
+            .catch(err => console.error('Error starting ball:', err));
         },
         updateBall() {
           const sessionParam = this.sessionId ? `?session=${this.sessionId}` : '';
-          axios.post(`/api/ball${sessionParam}`, { speed: this.speed, bounceMode: this.bounceMode, isMoving: this.isMoving, ballSize: this.ballSize });
+          axios.post(`/api/ball${sessionParam}`, { speed: this.speed, bounceMode: this.bounceMode, isMoving: this.isMoving, ballSize: this.ballSize })
+            .catch(err => console.error('Error updating ball:', err));
         },
         updateBackground() {
           const sessionParam = this.sessionId ? `?session=${this.sessionId}` : '';
-          axios.post(`/api/background${sessionParam}`, { backgroundColor: this.backgroundColor });
+          axios.post(`/api/background${sessionParam}`, { backgroundColor: this.backgroundColor })
+            .catch(err => console.error('Error updating background:', err));
         },
         updateBallColor() {
           const sessionParam = this.sessionId ? `?session=${this.sessionId}` : '';
-          axios.post(`/api/ballcolor${sessionParam}`, { ballColor: this.ballColor, randomColor: false });
+          axios.post(`/api/ballcolor${sessionParam}`, { ballColor: this.ballColor, randomColor: false })
+            .catch(err => console.error('Error updating ball color:', err));
         },
         updateBallColorMode() {
           const sessionParam = this.sessionId ? `?session=${this.sessionId}` : '';
           if (this.ballColorMode === 'random') {
-            axios.post(`/api/ballcolor${sessionParam}`, { randomColor: true });
+            axios.post(`/api/ballcolor${sessionParam}`, { randomColor: true })
+              .catch(err => console.error('Error updating ball color mode:', err));
           } else {
-            axios.post(`/api/ballcolor${sessionParam}`, { ballColor: this.ballColor, randomColor: false });
+            axios.post(`/api/ballcolor${sessionParam}`, { ballColor: this.ballColor, randomColor: false })
+              .catch(err => console.error('Error updating ball color mode:', err));
           }
         },
         fetchBall() {

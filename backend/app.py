@@ -42,12 +42,16 @@ def get_default_state():
 @app.route("/api/sound", methods=["GET"])
 def get_sound_state():
     state = get_session_state()
+    if isinstance(state, tuple):  # Error response
+        return state
     return jsonify(state["sound_state"])
 
 @app.route("/api/sound", methods=["POST"])
 def set_sound_state():
     data = request.json
     state = get_session_state()
+    if isinstance(state, tuple):  # Error response
+        return state
     state["sound_state"]["bilateral"] = data.get("bilateral", state["sound_state"]["bilateral"])
     state["sound_state"]["speed"] = data.get("speed", state["sound_state"]["speed"])
     return jsonify(state["sound_state"])
@@ -74,24 +78,32 @@ def get_session_state():
 @app.route("/api/background", methods=["GET"])
 def get_background():
     state = get_session_state()
+    if isinstance(state, tuple):  # Error response
+        return state
     return jsonify(state["background_state"])
 
 @app.route("/api/background", methods=["POST"])
 def set_background():
     data = request.json
     state = get_session_state()
+    if isinstance(state, tuple):  # Error response
+        return state
     state["background_state"]["backgroundColor"] = data.get("backgroundColor", state["background_state"]["backgroundColor"])
     return jsonify(state["background_state"])
 
 @app.route("/api/ballcolor", methods=["GET"])
 def get_ballcolor():
     state = get_session_state()
+    if isinstance(state, tuple):  # Error response
+        return state
     return jsonify(state["ball_color_state"])
 
 @app.route("/api/ballcolor", methods=["POST"])
 def set_ballcolor():
     data = request.json
     state = get_session_state()
+    if isinstance(state, tuple):  # Error response
+        return state
     if "ballColor" in data:
         state["ball_color_state"]["ballColor"] = data["ballColor"]
     if "randomColor" in data:
@@ -109,12 +121,16 @@ def get_session_count():
 @app.route("/api/ball", methods=["GET"])
 def get_ball():
     state = get_session_state()
+    if isinstance(state, tuple):  # Error response
+        return state
     return jsonify(state["ball_state"])
 
 @app.route("/api/ball", methods=["POST"])
 def set_ball():
     data = request.json
     state = get_session_state()
+    if isinstance(state, tuple):  # Error response
+        return state
     state["ball_state"]["speed"] = data.get("speed", state["ball_state"]["speed"])
     state["ball_state"]["bounceMode"] = data.get("bounceMode", state["ball_state"]["bounceMode"])
     state["ball_state"]["isMoving"] = data.get("isMoving", state["ball_state"]["isMoving"])
