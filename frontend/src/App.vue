@@ -201,9 +201,6 @@ export default {
         
         // Update background
         const newBgColor = bgRes.data.backgroundColor || '#ffffff';
-        if (newBgColor !== this.backgroundColor) {
-          console.log(`[PATIENT] Background color changed from ${this.backgroundColor} to ${newBgColor}`);
-        }
         this.backgroundColor = newBgColor;
         
         // Update ball color
@@ -222,17 +219,11 @@ export default {
         // Update bilateral sound
         const backendBilateral = soundRes.data.bilateral === true;
         if (backendBilateral && !this.bilateralSoundActive) {
-          console.log('[PATIENT] Backend says ON, starting bilateral sound');
           this.bilateralSoundActive = true;
           this.startBilateralSound();
         } else if (!backendBilateral && this.bilateralSoundActive) {
-          console.log('[PATIENT] Backend says OFF, stopping bilateral sound');
           this.bilateralSoundActive = false;
           this.stopBilateralSound();
-        }
-        // Debug: log every 10th poll to avoid console spam
-        if (Math.random() < 0.1) {
-          console.log(`[PATIENT] Poll: bilateral=${backendBilateral}, bg=${newBgColor}, moving=${this.isMoving}`);
         }
       } catch (error) {
         console.error('Error fetching state:', error);
@@ -253,17 +244,13 @@ export default {
     // Bilateral sound logic
     startBilateralSound() {
       if (!this.audioUnlocked || !this.audioCtx || !this.beepBuffer) {
-        console.log('[PATIENT] Cannot start bilateral sound - audio not ready');
         return;
       }
       
       // Prevent restarting if already running
       if (this.bilateralSoundTimer) {
-        console.log('[PATIENT] Bilateral sound already running, skipping restart');
         return;
       }
-      
-      console.log('[PATIENT] Starting bilateral sound');
       this.bilateralSoundTimer = setInterval(() => {
         const source = this.audioCtx.createBufferSource();
         source.buffer = this.beepBuffer;
@@ -290,7 +277,6 @@ export default {
       }, this.bilateralSpeed);
     },
     stopBilateralSound() {
-      console.log('[PATIENT] Stopping bilateral sound');
       if (this.bilateralSoundTimer) {
         clearInterval(this.bilateralSoundTimer);
         this.bilateralSoundTimer = null;
@@ -304,20 +290,12 @@ export default {
     }
   },
   mounted() {
-    document.title = 'EMDR Patient';
-    // Get session ID from URL
-    const urlParams = new URLSearchParams(window.location.search);
-    this.sessionId = urlParams.get('session') || '';
-    console.log(`[PATIENT] Loaded with session ID: ${this.sessionId}`);
-    this.fetchBall();
-    // Use requestAnimationFrame for smooth animation across all browsers
-    this.animate();
+    this.getSessionIdFromUrl();
     
-    // Single unified polling interval - fetch ALL state together
-    // 500ms for responsive updates (background color, bilateral sound)
-    this.fetchInterval = setInterval(() => {
-      this.fetchBall();
-    }, 500);
+    // Start polling and animation
+    this.fetchBall();
+    this.fetchInterval = setInterval(this.fetchBall, 500);
+    this.animate();
   },
   beforeDestroy() {
     if (this.animationFrame) {

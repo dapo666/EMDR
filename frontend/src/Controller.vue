@@ -119,10 +119,8 @@ export default {
         toggleBilateralSound() {
           const sessionParam = this.sessionId ? `?session=${this.sessionId}` : '';
           const newState = !this.bilateralSoundActive;
-          console.log('Controller toggling bilateral sound to:', newState);
           axios.post(`/api/sound${sessionParam}`, { bilateral: newState, speed: 500 })
             .then((response) => {
-              console.log('Server confirmed bilateral sound:', response.data.bilateral);
               this.bilateralSoundActive = newState;
             })
             .catch(err => console.error('Error toggling bilateral sound:', err));
@@ -187,12 +185,8 @@ export default {
         },
         updateBackground() {
           const sessionParam = this.sessionId ? `?session=${this.sessionId}` : '';
-          console.log(`[CONTROLLER] Sending background color: ${this.backgroundColor}`);
           axios.post(`/api/background${sessionParam}`, { backgroundColor: this.backgroundColor })
-            .then(response => {
-              console.log('[CONTROLLER] Background updated:', response.data);
-            })
-            .catch(err => console.error('[CONTROLLER] Error updating background:', err));
+            .catch(err => console.error('Error updating background:', err));
         },
         updateBallColor() {
           const sessionParam = this.sessionId ? `?session=${this.sessionId}` : '';
@@ -233,13 +227,11 @@ export default {
           });
           axios.get(`/api/sound${sessionParam}`).then(res => {
             this.bilateralSoundActive = res.data.bilateral === true;
-            console.log('Controller loaded bilateral sound state:', this.bilateralSoundActive);
           });
         }
       },
       mounted() {
         this.getSessionIdFromUrl();
-        console.log(`[CONTROLLER] Loaded with session ID: ${this.sessionId}`);
         // Only fetch initial state once - don't poll!
         // Controller sends updates, Patient receives them
         this.fetchBall();
