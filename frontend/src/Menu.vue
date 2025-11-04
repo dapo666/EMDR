@@ -39,8 +39,8 @@
           <span class="version">v2025.11.01</span>
         </div>
         <div class="footer-cta">
-          Interested in developing your own application with us? 
-          <a href="mailto:info@expatpsychologie.nl" class="contact-link">Contact now!</a>
+          Interested in developing your own application? 
+          <a href="mailto:info@expatpsychologie.nl" class="contact-link">Contact us now!</a>
           <br><br>
           <a href="https://expatpsychologie.nl/en/" target="_blank" class="contact-link">ExpatPsychologie.nl</a> - Your Psychologist in the Netherlands
         </div>
